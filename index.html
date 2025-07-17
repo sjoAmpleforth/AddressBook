@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampleforth Address Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .gallery-container {
+            width: 350px;
+            height: 400px; /* Adjust the height to fit the desired number of results */
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        .gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+        }
+        .user-card {
+            background-color: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .user-card:hover {
+            transform: scale(1.02);
+        }
+        .logo {
+            margin-bottom: 20px;
+            width: 8%;
+        }
+    </style>
+</head>
+<body>
+    <img src="logo-shield.png" alt="Logo" class="logo">
+    <header>Ampleforth Address Book</header>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, job title, or department" aria-label="Search by name, job title, or department">
+    </div>
+    <div class="gallery-container">
+        <div class="gallery" id="gallery"></div>
+    </div>
+
+    <script>
+        async function fetchCSV() {
+            try {
+                const response = await fetch('phonebook.csv');
+                const data = await response.text();
+                // console.log('CSV Data:', data); // Debugging statement
+                return data;
+            } catch (error) {
+                console.error('Error fetching CSV:', error);
+                return ''; // Return an empty string or handle the error appropriately
+            }
+        }
+
+        function parseCSV(data) {
+            const lines = data.split('\n');
+            const headers = lines[0].split(',');
+            const users = lines.slice(1).map(line => {
+                const values = line.split(',');
+                let user = {};
+                headers.forEach((header, index) => {
+                    user[header.trim()] = values[index].trim();
+                });
+                return user;
+            });
+            // console.log('Parsed Users:', users); // Debugging statement
+            return users;
+        }
+
+        async function loadPhonebook() {
+            const csvData = await fetchCSV();
+            const phonebook = parseCSV(csvData);
+            return phonebook;
+        }
+
+        document.getElementById('searchInput').addEventListener('input', async function() {
+            const query = this.value.toLowerCase();
+            const phonebook = await loadPhonebook();
+            let results;
+
+            if (query === 'hsm') {
+                results = phonebook.filter(user => 
+                    user.jobTitle.toLowerCase().includes('housemaster') || 
+                    user.jobTitle.toLowerCase().includes('housemistress')
+                );
+            } else {
+                results = phonebook.filter(user => 
+                    (user.name.toLowerCase().includes(query) || 
+                    user.department.toLowerCase().includes(query) || 
+                    user.jobTitle.toLowerCase().includes(query)) && 
+                    query.length >= 2
+                ).slice(0, 30); // Limit to 30 search results
+            }
+
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            results.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <strong>Name:</strong> ${user.name}<br>
+                    ${user.department ? `<strong>Department:</strong> ${user.department}<br>` : ''}
+                    ${user.jobTitle ? `<strong>Job Title:</strong> ${user.jobTitle}<br>` : ''}
+                    ${user.phone ? `<strong>Phone:</strong> <a href="tel:${user.phone}">${user.phone}</a><br>` : ''}
+                    <strong>Email:</strong> <a href="mailto:${user.email}">${user.email}</a>
+                `;
+                gallery.appendChild(userCard);
+            });
+        });
+    </script>
+</body>
+</html>

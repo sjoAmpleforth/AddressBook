@@ -1,0 +1,5 @@
+1). Run command line as Admin.
+2). Use change directory (cd), and point it to the folder containing webpage contents.( in this case; cd C:\Users\sjo\ADBook ).
+3). Run following command to start the local server: python -m http.server 8000 --bind 0.0.0.0
+
+(Note; python has to be installed to use this local server functionality).
